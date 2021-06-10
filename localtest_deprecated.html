@@ -1,0 +1,327 @@
+<html style="background-color: white; transition: 0.5s ease">
+
+<head>
+    <!-- <meta name="viewport" content="initial-scale=1.0"> -->
+    <title>[LOCAL] Connect Four</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Round">
+</head>
+<style>
+    @import url('https://rsms.me/inter/inter.css');
+    p,
+    h1,
+    h2,
+    a,
+    td,
+    input {
+        text-align: center;
+        font-family: inter;
+        color: black;
+        font-feature-settings: "ss01";
+        letter-spacing: -0.5px;
+    }
+    
+    .circle {
+        width: 64px;
+        height: 64px;
+        border-radius: 32px;
+        margin: 4px;
+        animation: dropin 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.05) backwards;
+    }
+    
+    @keyframes dropin {
+        0% {
+            transform: translateY(-256px);
+            opacity: 0;
+        }
+    }
+    
+    #board {
+        border-width: 2px;
+        border-color: gray;
+        border-style: ridge;
+        border-radius: 36px;
+    }
+    
+    #board td {
+        padding: 0;
+        width: 72px;
+        height: 72px;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        /* border-width: 2px;
+        border-color: gray;
+        border-style: ridge;
+        border-radius: 48px; */
+    }
+    
+    .droppers>td {
+        transition: 0.12s ease;
+        width: 72px;
+        height: 72px;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        /* animation: heightBiggen 0.25s ease backwards; */
+        cursor: pointer;
+        filter: blur(16px);
+        pointer-events: none;
+    }
+    
+    @keyframes heightBiggen {
+        0% {
+            height: 0;
+        }
+    }
+    
+    .droppers>td:hover {
+        transform: scale(1.2);
+    }
+    
+    .droppers>td:active {
+        transform: scale(1.1);
+    }
+    
+    .hoverfancy {
+        transition: all 240ms cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    }
+    
+    .hoverfancy:hover {
+        transform: scale(1.14) !important;
+    }
+    
+    .hoverfancy:active {
+        transform: scale(1.07) !important;
+    }
+</style>
+
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+    <div>
+        <h1 style="margin-bottom: 0;">Connect Four</h1>
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <h2 id="otherPlayersTurn" style="position: fixed; opacity: 0.5; transition: 0.12s ease; pointer-events: none;">Game has not started</h2>
+            <table>
+                <tr class="droppers">
+                    <td onclick="colClick(0)">Drop</td>
+                    <td onclick="colClick(1)">Drop</td>
+                    <td onclick="colClick(2)">Drop</td>
+                    <td onclick="colClick(3)">Drop</td>
+                    <td onclick="colClick(4)">Drop</td>
+                    <td onclick="colClick(5)">Drop</td>
+                    <td onclick="colClick(6)">Drop</td>
+                </tr>
+            </table>
+        </div>
+        <table id="board">
+            <tr class="r0">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+            <tr class="r1">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+            <tr class="r2">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+            <tr class="r3">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+            <tr class="r4">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+            <tr class="r5">
+                <td class="c0">
+                    <div class="circle" style="background-color: red;"></div>
+                </td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+
+        </table>
+        <h2 id="status">Connecting...</h2>
+        <div style="position: fixed; left: 0; top: 0;">
+            <button onclick="toggleYourTurn()">Toggle yourTurn</button>
+            <button onclick="requestClear()">Request Clear</button>
+            <p id="watchers"></p>
+        </div>
+    </div>
+    <i id="themeButton" class="material-icons-round responsiveIcon hoverfancy" onclick="toggleTheme();" style="-moz-user-select: none; -webkit-user-select: none; font-size: 48px; position: fixed; align-self: flex-end; margin-bottom: 32px; z-index: 10;">dark_mode</i>
+</body>
+<script>
+    var statusText = document.getElementById("status")
+    var yourTurn = false;
+    let positions = new Array(6);
+    var myColor = 1;
+    var partnerColor = 2;
+    for (var i = 0; i < 6; i++) {
+        positions[i] = new Array(7);
+        for (var b = 0; b < 7; b++) {
+            positions[i][b] = 0;
+        }
+    }
+    console.log(positions)
+    updateBoard()
+
+    function updateBoard() {
+        for (var r = 0; r < 6; r++) {
+            for (var c = 0; c < 7; c++) {
+                var point = document.querySelector('#board .r' + r + ' .c' + c)
+                var newinside = ""
+                if (positions[r][c] == 0) newinside = "";
+                if (positions[r][c] == 1) newinside = '<div class="circle" style="background-color: red;"></div>';
+                if (positions[r][c] == 2) newinside = '<div class="circle" style="background-color: gold;"></div>';
+                if (point.innerHTML != newinside) point.innerHTML = newinside;
+            }
+        }
+    }
+
+    function colClick(c) {
+        for (var r = 5; r >= 0; r--) {
+            if (positions[r][c] == 0) {
+                // positions[r][c] = 1
+                socket.send(JSON.stringify({
+                    'type': 'chipDrop',
+                    'row': r,
+                    'col': c
+                }));
+                toggleYourTurn()
+                updateBoard()
+                return
+            }
+        }
+        // alert("No room left.")
+        console.log("No room left.")
+    }
+
+    function toggleYourTurn() {
+        if (yourTurn) {
+            const droppers = document.querySelectorAll('.droppers td');
+            droppers.forEach(element => {
+                element.style.filter = "blur(16px)"
+                    // element.style.pointerEvents = "none";
+            });
+            document.querySelector("#otherPlayersTurn").style.opacity = 0.5;
+            document.querySelector("#otherPlayersTurn").innerHTML = "Opponent's turn"
+            yourTurn = false;
+        } else {
+            const droppers = document.querySelectorAll('.droppers td');
+            droppers.forEach(element => {
+                element.style.filter = "none"
+                element.style.pointerEvents = "all";
+            });
+            document.querySelector("#otherPlayersTurn").style.opacity = 0;
+            yourTurn = true;
+        }
+    }
+    lightTheme = true;
+
+    function toggleTheme() {
+        if (lightTheme) {
+            //DARK SETTINGS
+            const demoClasses = document.querySelectorAll('.responsiveIcon, p, h1, h2, a, td');
+            demoClasses.forEach(element => {
+                element.style.color = "#FFFFFF";
+            });
+            document.querySelector("html").style.backgroundColor = "#000000"
+            document.getElementById('themeButton').innerHTML = "light_mode";
+            lightTheme = false;
+        } else {
+            //LIGHT SETTINGS
+            const demoClasses = document.querySelectorAll('.responsiveIcon, p, h1, h2, a, td');
+            demoClasses.forEach(element => {
+                element.style.color = "#333333";
+            });
+            document.querySelector("html").style.backgroundColor = "#FFFFFF"
+            document.getElementById('themeButton').innerHTML = "dark_mode";
+            lightTheme = true;
+        }
+    }
+
+    function requestClear() {
+        socket.send('{"type":"clearRequest"}');
+    }
+
+    // Create WebSocket connection.
+    const socket = new WebSocket('ws://localhost:6002');
+
+    // Connection opened
+    socket.addEventListener('open', function(event) {
+        statusText.innerHTML = "Waiting for an opponent..."
+        console.log('Connected to the WS Server!')
+    });
+
+    // Connection closed
+    socket.addEventListener('close', function(event) {
+        statusText.innerHTML = "Connection Error. Please refresh."
+        console.log('Disconnected from the WS Server!')
+    });
+
+    // Listen for messages
+    socket.addEventListener('message', function(event) {
+        console.log('Message from server ', event.data);
+        console.log(event.data)
+        result = JSON.parse(event.data)
+        switch (result['type']) {
+            case 'boardUpdate':
+                positions = result['board']
+                updateBoard()
+                break
+            case 'setMe':
+                myColor = result['color']
+                break
+            case 'setPartner':
+                statusText.innerHTML = "Opponent has connected."
+                partnerColor = result['color']
+                break
+            case 'lostPartner':
+                statusText.innerHTML = "Opponent connection lost, hang tight"
+                break
+            case 'gameFull':
+                statusText.innerHTML = "Game is full. You are spectating."
+                break
+            case 'rxGroupUpdate':
+                document.getElementById('watchers').innerHTML = "There are " + result['viewers'] + " users in this session."
+                break
+            case 'boardClearedUpdate':
+                statusText.innerHTML = "Board cleared."
+                break
+        }
+    });
+    // Send a msg to the websocket
+    const sendMsg = () => {
+        socket.send('Hello from Client1!');
+    }
+</script>
+
+</html>

@@ -1,0 +1,458 @@
+<html class="adaptBackground" style="transition: 0.5s ease">
+
+<head>
+    <!-- <meta name="viewport" content="initial-scale=1.0"> -->
+    <title id="tabtitle">Connect Four</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Round">
+</head>
+<style>
+    @import url('https://rsms.me/inter/inter.css');
+
+    p,
+    h1,
+    h2,
+    a,
+    td,
+    input,
+    div {
+        text-align: center;
+        font-family: inter;
+        color: black;
+        font-feature-settings: "ss01";
+        letter-spacing: -0.5px;
+    }
+
+    .adaptBackground {
+        background-color: white;
+    }
+
+    .invertAdaptBackground {
+        background-color: black;
+        color: white;
+    }
+
+    .circle {
+        width: 64px;
+        height: 64px;
+        border-radius: 32px;
+        margin: 4px;
+        /* animation: zoomin 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.05) backwards; */
+        animation-duration: 0.2s;
+        animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.05);
+        animation-fill-mode: backwards;
+    }
+
+    @keyframes dropin {
+        0% {
+            transform: translateY(-256px);
+            opacity: 0;
+        }
+    }
+
+    @keyframes zoomin {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+    }
+
+    #board {
+        border-width: 2px;
+        border-color: gray;
+        border-style: ridge;
+        border-radius: 36px;
+    }
+
+    #board td {
+        padding: 0;
+        width: 72px;
+        height: 72px;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        /* border-width: 2px;
+        border-color: gray;
+        border-style: ridge;
+        border-radius: 48px; */
+    }
+
+    .droppers>td {
+        transition: 0.12s ease;
+        width: 72px;
+        height: 72px;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        /* animation: heightBiggen 0.25s ease backwards; */
+        cursor: pointer;
+        filter: blur(16px);
+        pointer-events: none;
+    }
+
+    @keyframes heightBiggen {
+        0% {
+            height: 0;
+        }
+    }
+
+    .droppers>td:hover {
+        transform: scale(1.2);
+    }
+
+    .droppers>td:active {
+        transform: scale(1.1);
+    }
+
+    .hoverfancy {
+        transition: all 240ms cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    }
+
+    .hoverfancy:hover {
+        transform: scale(1.14) !important;
+    }
+
+    .hoverfancy:active {
+        transform: scale(1.07) !important;
+    }
+
+    #alertMessage {
+        position: fixed;
+        top: 16px;
+        font-weight: 600;
+        font-size: 24px;
+        border-radius: 8px;
+        transition: 0.25s ease;
+        padding: 8px;
+        transform: translateY(-150%);
+        /* animation-name: alertDisappear; */
+        animation-duration: 0.25s;
+        animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation-fill-mode: forwards;
+    }
+
+    @keyframes alertAppear {
+        0% {
+            transform: translateY(-150%);
+        }
+
+        100% {
+            transform: none;
+        }
+    }
+
+    @keyframes alertDisappear {
+        0% {
+            transform: none;
+        }
+
+        100% {
+            transform: translateY(-150%);
+        }
+    }
+</style>
+
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+    <h1 id="fatalErrorText" style="position: fixed; display: none; opacity: 0; transition: 0.5s ease;">Game unavailable.
+        Refresh to retry.</h1>
+    <div id="alertMessage" class="invertAdaptBackground">Alert</div>
+    <div id="logoHeader" style="display: flex; position: fixed; align-items: center; top: 32; left: 32;">
+        <img src="cy2logo.png" class="hoverfancy" onclick="window.location = 'https://cy2.me'"
+            style="-moz-user-select: none; -webkit-user-select: none; width: 64px; z-index: 10; margin-right: 16px;">
+        <h1>Connect 4</h1>
+    </div>
+    <div id="mostOfIt" style="transition: 0.25s ease;">
+        <!-- <h1 style="margin-bottom: 0;">Connect Four</h1> -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <h2 id="lockedWhy" style="position: fixed; opacity: 0.5; transition: 0.12s ease; pointer-events: none;">Game
+                has not started</h2>
+            <table>
+                <tr class="droppers">
+                    <td onclick="colClick(0)">Drop</td>
+                    <td onclick="colClick(1)">Drop</td>
+                    <td onclick="colClick(2)">Drop</td>
+                    <td onclick="colClick(3)">Drop</td>
+                    <td onclick="colClick(4)">Drop</td>
+                    <td onclick="colClick(5)">Drop</td>
+                    <td onclick="colClick(6)">Drop</td>
+                </tr>
+            </table>
+        </div>
+        <table id="board">
+            <tr class="r0">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+            <tr class="r1">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+            <tr class="r2">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+            <tr class="r3">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+            <tr class="r4">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+            <tr class="r5">
+                <td class="c0"></td>
+                <td class="c1"></td>
+                <td class="c2"></td>
+                <td class="c3"></td>
+                <td class="c4"></td>
+                <td class="c5"></td>
+                <td class="c6"></td>
+            </tr>
+
+        </table>
+        <h2 id="status">Connecting...</h2>
+        <p><span style="font-weight: bolder; padding: 4px; border-radius: 5px; transition: 0.25s ease;"
+                id="playerText">Identifying you...</span> <span id="onlineUsers">-- Online</span></p>
+        <div style="position: fixed; right: 0; top: 0; display: flex; flex-direction: column;">
+            <button onclick="toggleYourTurn()">Toggle yourTurn</button>
+            <button onclick="requestClear()">Request Clear</button>
+            <button onclick="topAlert('This is a topAlert.')">Sample alert</button>
+            <p id="watchers"></p>
+        </div>
+    </div>
+    <div style="display: flex; flex-direction: column; position: fixed; align-self: flex-end; margin-bottom: 16px;">
+        <div style="margin-bottom: 16px;">
+            <i id="themeButton" class="material-icons-round responsiveIcon hoverfancy" onclick="toggleThemeClick();"
+                style="-moz-user-select: none; -webkit-user-select: none; font-size: 48px; z-index: 10;">dark_mode</i>
+        </div>
+    </div>
+</body>
+<script>
+    var statusText = document.getElementById("status")
+    var playerText = document.getElementById('playerText')
+    var onlineUsers = document.getElementById('onlineUsers')
+    var mostOfIt = document.getElementById('mostOfIt');
+    var fatalErrorText = document.getElementById('fatalErrorText');
+    var yourTurn = false;
+    let positions = new Array(6);
+    var myColor = 1;
+    var partnerColor = 2;
+    var colors = ["#EE0000", "#ffc107"]
+    var colorsTexts = ["Red", "Yellow"]
+    for (var i = 0; i < 6; i++) {
+        positions[i] = new Array(7);
+        for (var b = 0; b < 7; b++) {
+            positions[i][b] = 0;
+        }
+    }
+    console.log(positions)
+
+    // Create WebSocket connection.
+    if (window.location.hash == "#local") {
+        var socket = new WebSocket('ws://localhost:6002');
+        document.getElementById('tabtitle').innerHTML = "LOCAL Cn4"
+    } else var socket = new WebSocket('wss://connect4-wss.secure1.cy2.me');
+    // Connection opened
+    socket.addEventListener('open', function (event) {
+        statusText.innerHTML = "Waiting for an opponent..."
+        console.log('Connected to the WS Server!')
+    });
+
+    // Connection closed
+    socket.addEventListener('close', function (event) {
+        statusText.innerHTML = "Connection Error. Please refresh."
+        mostOfIt.style.filter = "blur(16px)"
+        fatalErrorText.style.display = "block"
+        fatalErrorText.style.opacity = "1"
+        console.log('Disconnected from the WS Server!')
+    });
+
+    // Listen for messages
+    socket.addEventListener('message', function (event) {
+        console.log('rx: ', event.data);
+        // console.log(event.data)
+        result = JSON.parse(event.data)
+        switch (result['type']) {
+            case 'boardUpdate':
+                positions = result['board']
+                updateBoard()
+                break
+            case 'setMe':
+                myColor = result['color']
+                playerText.style.backgroundColor = colors[myColor - 1]
+                playerText.style.color = "black"
+                playerText.innerHTML = "You are " + colorsTexts[myColor - 1].toUpperCase()
+                break
+            case 'setPartner':
+                topAlert('Oppponent has connected.')
+                statusText.innerHTML = "Opponent has connected"
+                setLocked(false)
+                partnerColor = result['color']
+                break
+            case 'lostPartner':
+                statusText.innerHTML = "Opponent connection lost, hang tight"
+                break
+            case 'gameFull':
+                topAlert("Game is full. You are spectating.")
+                statusText.innerHTML = "Game in progress"
+                playerText.innerHTML = "SPECTATOR"
+                break
+            case 'rxGroupUpdate':
+                onlineUsers.innerHTML = result['viewers'] + " Online"
+                break
+            case 'boardClearedUpdate':
+                topAlert("Board cleared.")
+                break
+        }
+    });
+
+    var firstUpdate = true
+    function updateBoard() {
+        for (var r = 0; r < 6; r++) {
+            for (var c = 0; c < 7; c++) {
+                var point = document.querySelector('#board .r' + r + ' .c' + c)
+                var newinside = ""
+                var animationStyle = "animation-name: dropin; animation-delay: none;"
+                if (firstUpdate) {
+                    animationStyle = "animation-name: zoomin; animation-delay: " + Math.random() * 0.25 + "s;"
+                }
+                if (positions[r][c] == 0) newinside = "";
+                if (positions[r][c] == 1) newinside = '<div class="circle" style="background-color: ' + colors[0] + ';' + animationStyle + '"></div>';
+                if (positions[r][c] == 2) newinside = '<div class="circle" style="background-color: ' + colors[1] + ';' + animationStyle + '"></div>';
+                if (point.innerHTML.toString().length < 1 || point.innerHTML.substring(0, 51) != newinside.substring(0, 51)) point.innerHTML = newinside;
+            }
+        }
+        firstUpdate = false;
+        // document.querySelectorAll('.circle').forEach(element => {
+        //     element.style.animationName = "dropin";
+        //     element.style.animationDelay = "none";
+        // });
+    }
+
+    function colClick(c) {
+        for (var r = 5; r >= 0; r--) {
+            if (positions[r][c] == 0) {
+                // positions[r][c] = 1
+                socket.send(JSON.stringify({
+                    'type': 'chipDrop',
+                    'row': r,
+                    'col': c
+                }));
+                // toggleYourTurn()
+                // updateBoard()
+                return
+            }
+        }
+        // alert("No room left.")
+        console.log("No room left.")
+    }
+
+    var lightTheme;
+    try {
+        lightTheme = !(localStorage.getItem("userThemePreference").substring(0, 1) == "t")
+    } catch {
+        lightTheme = false;
+        localStorage.setItem("userThemePreference", lightTheme)
+    }
+
+    // console.log(lightTheme)
+    // console.log(localStorage.getItem('userThemePreference'))
+    toggleTheme();
+
+    function toggleTheme() {
+        if (lightTheme) {
+            //DARK SETTINGS
+            const demoClasses = document.querySelectorAll('.responsiveIcon, p, h1, h2, a, td');
+            demoClasses.forEach(element => {
+                element.style.color = "#FFFFFF";
+            });
+            document.querySelector(".adaptBackground").style.backgroundColor = "#000000"
+            document.querySelector(".invertAdaptBackground").style.backgroundColor = "#FFFFFF"
+            document.querySelector(".invertAdaptBackground").style.color = "#000000"
+            document.getElementById('themeButton').innerHTML = "light_mode";
+            lightTheme = false;
+        } else {
+            //LIGHT SETTINGS
+            const demoClasses = document.querySelectorAll('.responsiveIcon, p, h1, h2, a, td');
+            demoClasses.forEach(element => {
+                element.style.color = "#333333";
+            });
+            document.querySelector(".adaptBackground").style.backgroundColor = "#FFFFFF"
+            document.querySelector(".invertAdaptBackground").style.backgroundColor = "#000000"
+            document.querySelector(".invertAdaptBackground").style.color = "#FFFFFF"
+            document.getElementById('themeButton').innerHTML = "dark_mode";
+            lightTheme = true;
+        }
+    }
+
+    function toggleThemeClick() {
+        toggleTheme()
+        localStorage.setItem("userThemePreference", lightTheme);
+        // console.log(localStorage.getItem('userThemePreference'))
+    }
+
+    function requestClear() {
+        socket.send('{"type":"clearRequest"}');
+    }
+
+    var alertStack = 0;
+
+    function topAlert(message) {
+        var alertMessage = document.getElementById('alertMessage')
+        alertMessage.innerHTML = message
+        alertMessage.style.animationName = "alertAppear"
+        alertStack++
+        setTimeout(() => {
+            alertStack--
+            if (alertStack == 0) alertMessage.style.animationName = "alertDisappear"
+        }, 4000);
+    }
+    function setLocked(state, message = null) {
+        if (state) {
+            const droppers = document.querySelectorAll('.droppers td');
+            droppers.forEach(element => {
+                element.style.filter = "blur(16px)"
+                // element.style.pointerEvents = "none";
+            });
+            document.querySelector("#lockedWhy").style.opacity = 0.5;
+            if (message != null) document.querySelector("#lockedWhy").innerHTML = "Opponent's turn"
+            yourTurn = false;
+        } else {
+            const droppers = document.querySelectorAll('.droppers td');
+            droppers.forEach(element => {
+                element.style.filter = "none"
+                element.style.pointerEvents = "all";
+            });
+            document.querySelector("#lockedWhy").style.opacity = 0;
+            yourTurn = true;
+        }
+    }
+    // Send a msg to the websocket
+    const sendMsg = () => {
+        socket.send('Hello from Client1!');
+    }
+</script>
+
+</html>
